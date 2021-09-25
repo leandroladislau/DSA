@@ -29,9 +29,9 @@
   
   # Pasta de trabalho -------------------------------------------------------
   
-  setwd("D/DataSience/CientistaDeDados/BigDataAnalytics_R_Azure/ProjetoscomFeedback/Projeto01")
+  setwd("SuaPastaDeTrabalhoAqui")
   
-  # Variaveis ---------------------------------------------------------------
+  # Variáveis ---------------------------------------------------------------
   
   # Train dataset
   # ip: ip address of click.
@@ -73,7 +73,7 @@
   # Novo dataset com var categórica -----------------------------------------
   # Transformar os dados em categóricos
   # Adicionar um dado com o dia da semana
-  # Excluir a coluna de data do download, do click e o ip pois não acrescentam info
+  # Excluir a coluna de data do download e do click pois não acrescentam info
   df1 <- df %>% 
     mutate(app = as.factor(app), 
            device = as.factor(device), 
@@ -96,7 +96,7 @@
   # Verificar os valores NA no novo dataset
   missmap(df1, main = "Valores NA")
   
-  # Visualizar variaveis ---------------------------------------------------
+  # Visualizar variáveis ---------------------------------------------------
   # Plotar as var categóricas em ordem
   categoricas <- c("app", "device", "os", "channel", "is_attributed", "wday")
   
@@ -126,7 +126,7 @@
   
   lapply(categoricas, graficos_cat)
   
-  # Spliting os dados em treino e teste -------------------------------------
+  # Spliting o dataset em treino e teste -------------------------------------
   indice <- createDataPartition(df1$is_attributed, p = 0.70, list = FALSE)
   df_treino <- df1[indice,]
   df_teste <- df1[-indice,]
@@ -135,7 +135,7 @@
   df_treino_labels <- df_treino$is_attributed
   df_teste_labels <- df_teste$is_attributed
   
-  # Verificar a dimensão dos dados de treino e teste
+  # Verificar a dimensão dos datasets de treino e teste
   dim(df_treino)
   dim(df_teste)
   
@@ -216,6 +216,10 @@
   auc <- performance(pr, measure = "auc")
   auc <- auc@y.values[[1]]
   auc
+  
+  # Média de erro
+  error1 <- mean(df_teste$is_attributed != pred1)
+  error1
  
 # XGBoost  ---------------------------------------------------------
   # Modelo XGBoost
@@ -363,9 +367,10 @@
            print.thres=TRUE,
            main= 'ROC Curve')
   
-  # Accuracy Sensitivity Specificity  Prevalence 
-  # 0.97639921  0.99958970  0.07446809  0.97493250  
-
+  # Média de erro
+  error3 <- mean(df_teste$is_attributed != pred3)
+  error3
+  
 # KNN ---------------------------------------------------------------------
   # Transformar as variáveis em númerica
   list_num <- c("ip", "app", "device", "os", "channel", "wday")
@@ -437,34 +442,32 @@
     matrix4$byClass["Prevalence"])
   
   # Média de erro
-  mean(df_teste$is_attributed != pred4)
+  error4 <- mean(df_teste$is_attributed != pred4)
+  error4
 
 # Random Forest -----------------------------------------------------------
+  # Treinar o modelo
   modelo5 <- randomForest(is_attributed ~ ., data = df_treino_bal, proximity=FALSE) 
   
-  print(modelo5)
+  # Visualizar o resultado do modelo
+  modelo5
   
+  # Previsão do modelo
   pred5 <- predict(modelo5, df_teste)
   
+  # MAtrix de confusão
   matrix5 <- confusionMatrix(pred5, df_teste$is_attributed)
-  
   matrix5
   
   c(matrix5$overall["Accuracy"],
     matrix5$byClass["Sensitivity"],
     matrix5$byClass["Specificity"],
     matrix5$byClass["Prevalence"])
-  
-  # Accuracy Sensitivity Specificity  Prevalence 
-  # 0.9891663   0.9898433   0.6911765   0.9977333 
-  
-  t <- tuneRF(train[,-5], train[,5],
-              stepFactor = 0.5,
-              plot = TRUE,
-              ntreeTry = 150,
-              trace = TRUE,
-              improve = 0.05)
 
+  # Média de erro
+  error5 <- mean(df_teste$is_attributed != pred5)
+  error5
+  
 # Escolha do melhor modelo ------------------------------------------------
      
   Accuracy <- c(matrix1$overall["Accuracy"], matrix2$overall["Accuracy"], 
@@ -481,9 +484,11 @@
 
   Prevalence <- c(matrix1$byClass["Prevalence"], matrix2$byClass["Prevalence"], 
                   matrix3$byClass["Prevalence"], matrix4$byClass["Prevalence"], 
-                  matrix5$byClass["Prevalence"]) 
+                  matrix5$byClass["Prevalence"])
   
-  tabela_final <- data.frame(Accuracy, Sensitivity, Specificity, Prevalence, 
+  Errors <- c(error1, "NA", error3, error4, error5) 
+  
+  tabela_final <- data.frame(Accuracy, Sensitivity, Specificity, Prevalence, Errors,
                              row.names = c("rpart", "xgboost", "naive byes",
                                            "knn", "randomForest"))
   
