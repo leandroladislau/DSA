@@ -1,4 +1,3 @@
-```markdown
 # Pacotes -----------------------------------------------------------------
   
   library(tidyverse)
@@ -497,4 +496,3 @@
   
   # Minha escolha final baseado na sensitividade (razão de true positives)
   # seria o modelo naive bayes
-  ```
